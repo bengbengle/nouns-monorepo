@@ -2,36 +2,23 @@
 
 /// @title Nouns DAO Logic interfaces and events
 
-/*********************************
- * ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ *
- * ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ *
- * ░░░░░░█████████░░█████████░░░ *
- * ░░░░░░██░░░████░░██░░░████░░░ *
- * ░░██████░░░████████░░░████░░░ *
- * ░░██░░██░░░████░░██░░░████░░░ *
- * ░░██░░██░░░████░░██░░░████░░░ *
- * ░░░░░░█████████░░█████████░░░ *
- * ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ *
- * ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ *
- *********************************/
-
 // LICENSE
-// NounsDAOInterfaces.sol is a modified version of Compound Lab's GovernorBravoInterfaces.sol:
+// NounsDAOInterfaces.sol 是 Compound Lab 的 GovernorBravoInterfaces.sol 的修改版本：
 // https://github.com/compound-finance/compound-protocol/blob/b9b14038612d846b83f8a009a82c38974ff2dcfe/contracts/Governance/GovernorBravoInterfaces.sol
 //
-// GovernorBravoInterfaces.sol source code Copyright 2020 Compound Labs, Inc. licensed under the BSD-3-Clause license.
-// With modifications by Nounders DAO.
-//
-// Additional conditions of BSD-3-Clause can be found here: https://opensource.org/licenses/BSD-3-Clause
-//
-// MODIFICATIONS
-// NounsDAOEvents, NounsDAOProxyStorage, NounsDAOStorageV1 adds support for changes made by Nouns DAO to GovernorBravo.sol
-// See NounsDAOLogicV1.sol for more details.
+// GovernorBravoInterfaces.sol 源代码 版权所有 2020 Compound Labs, Inc.，根据 BSD-3-Clause 许可进行许可。 
+// 由 Nounders DAO 修改。 
+// 
+// BSD-3-Clause 的附加条件可以在这里找到： https://opensource.org/licenses/BSD-3-Clause 
+// 
+// 修改 
+// NounsDAOEvents、 NounsDAOProxyStorage、 NounsDAOStorageV1 添加了对 由名词 DAO 到 GovernorBravo.sol 
+// 有关更多详细信息，请参见 NounsDAOLogicV1.sol。
 
 pragma solidity ^0.8.6;
 
 contract NounsDAOEvents {
-    /// @notice An event emitted when a new proposal is created
+    /// @notice 创建新提案时发出的事件
     event ProposalCreated(
         uint256 id,
         address proposer,
@@ -58,33 +45,33 @@ contract NounsDAOEvents {
         string description
     );
 
-    /// @notice An event emitted when a vote has been cast on a proposal
-    /// @param voter The address which casted a vote
-    /// @param proposalId The proposal id which was voted on
-    /// @param support Support value for the vote. 0=against, 1=for, 2=abstain
-    /// @param votes Number of votes which were cast by the voter
-    /// @param reason The reason given for the vote by the voter
+    /// @notice 对提案进行投票时发出的事件 
+    /// @param voter 投票的地址 
+    /// @param proposalId 被投票的提案 ID 
+    /// @param support 支持值投票。 0=反对, 1=赞成, 2=弃权 
+    /// @param votes 投票者投票数 
+    /// @param reason 投票者给出的投票理由
     event VoteCast(address indexed voter, uint256 proposalId, uint8 support, uint256 votes, string reason);
 
-    /// @notice An event emitted when a proposal has been canceled
+    /// @notice 取消提案时发出的事件
     event ProposalCanceled(uint256 id);
 
-    /// @notice An event emitted when a proposal has been queued in the NounsDAOExecutor
+    /// @notice 当提案在 NounsDAOExecutor 中排队时发出的事件
     event ProposalQueued(uint256 id, uint256 eta);
 
-    /// @notice An event emitted when a proposal has been executed in the NounsDAOExecutor
+    /// @notice 在 NounsDAOExecutor 中执行 提案时 发出的事件
     event ProposalExecuted(uint256 id);
 
     /// @notice An event emitted when a proposal has been vetoed by vetoAddress
     event ProposalVetoed(uint256 id);
 
-    /// @notice An event emitted when the voting delay is set
+    /// @notice 设置投票延迟时发出的事件
     event VotingDelaySet(uint256 oldVotingDelay, uint256 newVotingDelay);
 
-    /// @notice An event emitted when the voting period is set
+    /// @notice 设置投票周期时发出的事件
     event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod);
 
-    /// @notice Emitted when implementation is changed
+    /// @notice 当实现改变时发出
     event NewImplementation(address oldImplementation, address newImplementation);
 
     /// @notice Emitted when proposal threshold basis points is set
@@ -104,10 +91,10 @@ contract NounsDAOEvents {
 }
 
 contract NounsDAOProxyStorage {
-    /// @notice Administrator for this contract
+    /// @notice 本合同的管理员
     address public admin;
 
-    /// @notice Pending administrator for this contract
+    /// @notice 此合同的待定管理员
     address public pendingAdmin;
 
     /// @notice Active brains of Governor
@@ -115,92 +102,90 @@ contract NounsDAOProxyStorage {
 }
 
 /**
- * @title Storage for Governor Bravo Delegate
- * @notice For future upgrades, do not change NounsDAOStorageV1. Create a new
- * contract which implements NounsDAOStorageV1 and following the naming convention
- * NounsDAOStorageVX.
+ * @title 州长 Bravo 代表的存储 
+ * @notice 对于未来的升级，不要更改 NounsDAOStorageV1。 创建一个实现 NounsDAOStorageV1 并遵循命名约定 NounsDAOStorageVX 的新合约。
  */
 contract NounsDAOStorageV1 is NounsDAOProxyStorage {
-    /// @notice Vetoer who has the ability to veto any proposal
+    /// @notice 有权否决任何提案的否决者
     address public vetoer;
 
-    /// @notice The delay before voting on a proposal may take place, once proposed, in blocks
+    /// @notice 对提案进行投票前的延迟，一旦提出，可能会分批进行
     uint256 public votingDelay;
 
-    /// @notice The duration of voting on a proposal, in blocks
+    /// @notice 对提案进行投票的持续时间，以区块为单位
     uint256 public votingPeriod;
 
-    /// @notice The basis point number of votes required in order for a voter to become a proposer. *DIFFERS from GovernerBravo
+    /// @notice 投票人成为提议人所需的 投票数。  *与 GovernerBravo 不同
     uint256 public proposalThresholdBPS;
 
-    /// @notice The basis point number of votes in support of a proposal required in order for a quorum to be reached and for a vote to succeed. *DIFFERS from GovernerBravo
+    /// @notice 为了达到 法定人数 并 投票成功 所需的支持提案的 票数。 * 与 GovernerBravo 不同
     uint256 public quorumVotesBPS;
 
-    /// @notice The total number of proposals
+    /// @notice 提案总数
     uint256 public proposalCount;
 
-    /// @notice The address of the Nouns DAO Executor NounsDAOExecutor
+    /// @notice Nouns DAO Executor 的地址 NounsDAOExecutor
     INounsDAOExecutor public timelock;
 
-    /// @notice The address of the Nouns tokens
+    /// @notice Nouns tokens 的地址
     NounsTokenLike public nouns;
 
     /// @notice The official record of all proposals ever proposed
     mapping(uint256 => Proposal) public proposals;
 
-    /// @notice The latest proposal for each proposer
+    /// @notice 每个提案人的最新提案
     mapping(address => uint256) public latestProposalIds;
 
     struct Proposal {
-        /// @notice Unique id for looking up a proposal
+        /// @notice 用于查找提案的唯一 ID
         uint256 id;
-        /// @notice Creator of the proposal
+        /// @notice 提案的创建者
         address proposer;
-        /// @notice The number of votes needed to create a proposal at the time of proposal creation. *DIFFERS from GovernerBravo
+        /// @notice 创建提案时创建提案所需的票数。 *与GovernerBravo 不同
         uint256 proposalThreshold;
-        /// @notice The number of votes in support of a proposal required in order for a quorum to be reached and for a vote to succeed at the time of proposal creation. *DIFFERS from GovernerBravo
+        /// @notice 为了达到法定人数并在提案创建时投票成功所需的支持提案的票数。 *与GovernerBravo 不同
         uint256 quorumVotes;
-        /// @notice The timestamp that the proposal will be available for execution, set once the vote succeeds
+        /// @notice 提案可用于执行的时间戳，在投票成功后设置
         uint256 eta;
-        /// @notice the ordered list of target addresses for calls to be made
+        /// @notice 要进行调用的目标地址的有序列表
         address[] targets;
-        /// @notice The ordered list of values (i.e. msg.value) to be passed to the calls to be made
+        /// @notice 要传递给要进行的调用的有序值列表（即 msg.value）
         uint256[] values;
-        /// @notice The ordered list of function signatures to be called
+        /// @notice 要调用的函数签名的有序列表
         string[] signatures;
-        /// @notice The ordered list of calldata to be passed to each call
+        /// @notice 要传递给每个调用的调用数据的有序列表
         bytes[] calldatas;
-        /// @notice The block at which voting begins: holders must delegate their votes prior to this block
+        /// @notice 投票开始的区块：持有人必须在该区块之前委托他们的投票
         uint256 startBlock;
-        /// @notice The block at which voting ends: votes must be cast prior to this block
+        /// @notice 投票结束的区块： 必须在该区块之前投票
         uint256 endBlock;
-        /// @notice Current number of votes in favor of this proposal
+        /// @notice 目前赞成该提案的票数
         uint256 forVotes;
-        /// @notice Current number of votes in opposition to this proposal
+        /// @notice 目前反对该提案的票数
         uint256 againstVotes;
-        /// @notice Current number of votes for abstaining for this proposal
+        /// @notice 目前对该提案弃权的票数
         uint256 abstainVotes;
-        /// @notice Flag marking whether the proposal has been canceled
+        /// @notice 标记提案是否已被取消的标志
         bool canceled;
-        /// @notice Flag marking whether the proposal has been vetoed
+        /// @notice 标记提案是否被否决的标志
         bool vetoed;
-        /// @notice Flag marking whether the proposal has been executed
+        /// @notice 标记提案是否已执行的标志
         bool executed;
-        /// @notice Receipts of ballots for the entire set of voters
+        /// @notice 全体选民的选票收据
         mapping(address => Receipt) receipts;
     }
 
-    /// @notice Ballot receipt record for a voter
+    /// @notice 选民的选票收据记录
     struct Receipt {
-        /// @notice Whether or not a vote has been cast
+        /// @notice 是否已投票
         bool hasVoted;
-        /// @notice Whether or not the voter supports the proposal or abstains
+        /// @notice 选民是否支持或弃权
         uint8 support;
-        /// @notice The number of votes the voter had, which were cast
+        /// @notice 选民的票数，已投
         uint96 votes;
     }
 
-    /// @notice Possible states that a proposal may be in
+    /// @notice 提案可能处于的可能状态
     enum ProposalState {
         Pending,
         Active,

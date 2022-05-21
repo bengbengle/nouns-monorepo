@@ -24,13 +24,12 @@
 //
 // Additional conditions of BSD-3-Clause can be found here: https://opensource.org/licenses/BSD-3-Clause
 //
-// MODIFICATIONS
-// Checkpointing logic from Comp.sol has been used with the following modifications:
-// - `delegates` is renamed to `_delegates` and is set to private
-// - `delegates` is a public function that uses the `_delegates` mapping look-up, but unlike
-//   Comp.sol, returns the delegator's own address if there is no delegate.
-//   This avoids the delegator needing to "delegate to self" with an additional transaction
-// - `_transferTokens()` is renamed `_beforeTokenTransfer()` and adapted to hook into OpenZeppelin's ERC721 hooks.
+// 修改 
+// Comp.sol 中的检查点逻辑已用于以下修改： 
+// - `delegates` 重命名为 `_delegates` 并设置为私有 
+// - `delegates` 是一个使用 ` 的公共函数_delegates` 映射查找，但与 Comp.sol 不同，如果没有委托，则返回委托者自己的地址。 
+// 这避免了委托人需要通过额外的交易“委托给自己” 
+// - `_transferTokens()` 被重命名为 `_beforeTokenTransfer()` 并适应了挂钩到 OpenZeppelin 的 ERC721 挂钩。
 
 pragma solidity ^0.8.6;
 
@@ -38,30 +37,29 @@ import './ERC721Enumerable.sol';
 
 abstract contract ERC721Checkpointable is ERC721Enumerable {
     /// @notice Defines decimals as per ERC-20 convention to make integrations with 3rd party governance platforms easier
+    /// @notice 根据 ERC-20 约定定义小数，以更轻松地与第 3 方治理平台集成
     uint8 public constant decimals = 0;
 
-    /// @notice A record of each accounts delegate
+    /// @notice 每个账户委托人的记录
     mapping(address => address) private _delegates;
 
-    /// @notice A checkpoint for marking number of votes from a given block
+    /// @notice 用于标记给定区块的投票数的检查点
     struct Checkpoint {
         uint32 fromBlock;
         uint96 votes;
     }
 
-    /// @notice A record of votes checkpoints for each account, by index
+    /// @notice 每个帐户的投票检查点记录，按索引
     mapping(address => mapping(uint32 => Checkpoint)) public checkpoints;
 
-    /// @notice The number of checkpoints for each account
+    /// @notice 每个账户的检查点数
     mapping(address => uint32) public numCheckpoints;
 
     /// @notice The EIP-712 typehash for the contract's domain
-    bytes32 public constant DOMAIN_TYPEHASH =
-        keccak256('EIP712Domain(string name,uint256 chainId,address verifyingContract)');
+    bytes32 public constant DOMAIN_TYPEHASH = keccak256('EIP712Domain(string name,uint256 chainId,address verifyingContract)');
 
     /// @notice The EIP-712 typehash for the delegation struct used by the contract
-    bytes32 public constant DELEGATION_TYPEHASH =
-        keccak256('Delegation(address delegatee,uint256 nonce,uint256 expiry)');
+    bytes32 public constant DELEGATION_TYPEHASH = keccak256('Delegation(address delegatee,uint256 nonce,uint256 expiry)');
 
     /// @notice A record of states for signing / validating signatures
     mapping(address => uint256) public nonces;

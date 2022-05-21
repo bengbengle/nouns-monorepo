@@ -27,13 +27,13 @@ import { IERC721 } from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import { IProxyRegistry } from './external/opensea/IProxyRegistry.sol';
 
 contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
-    // The nounders DAO address (creators org)
+    // nounders DAO 地址（creators org）
     address public noundersDAO;
 
-    // An address who has permissions to mint Nouns
+    // 有权铸造 Nouns Token 的地址
     address public minter;
 
-    // The Nouns token URI descriptor
+    // URI 描述符
     INounsDescriptor public descriptor;
 
     // The Nouns token seeder
@@ -42,13 +42,13 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     // Whether the minter can be updated
     bool public isMinterLocked;
 
-    // Whether the descriptor can be updated
+    // 描述符是否可以更新
     bool public isDescriptorLocked;
 
-    // Whether the seeder can be updated
+    // 播种机是否可以更新
     bool public isSeederLocked;
 
-    // The noun seeds
+    // 名词种子
     mapping(uint256 => INounsSeeder.Seed) public seeds;
 
     // The internal noun ID tracker
@@ -69,7 +69,7 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice Require that the descriptor has not been locked.
+     * @notice 要求描述符没有被锁定。
      */
     modifier whenDescriptorNotLocked() {
         require(!isDescriptorLocked, 'Descriptor is locked');
@@ -77,7 +77,7 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice Require that the seeder has not been locked.
+     * @notice 要求播种机没有被锁定。
      */
     modifier whenSeederNotLocked() {
         require(!isSeederLocked, 'Seeder is locked');
@@ -85,15 +85,18 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice Require that the sender is the nounders DAO.
+     * @notice 要求发送者是名词者 DAO
      */
     modifier onlyNoundersDAO() {
-        require(msg.sender == noundersDAO, 'Sender is not the nounders DAO');
+        require(
+            msg.sender == noundersDAO, 
+            'Sender is not the nounders DAO'
+        );
         _;
     }
 
     /**
-     * @notice Require that the sender is the minter.
+     * @notice 要求发件人是铸币者。
      */
     modifier onlyMinter() {
         require(msg.sender == minter, 'Sender is not the minter');
@@ -115,25 +118,25 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice The IPFS URI of contract-level metadata.
+     * @notice 合约级元数据的 IPFS URI
      */
     function contractURI() public view returns (string memory) {
         return string(abi.encodePacked('ipfs://', _contractURIHash));
     }
 
     /**
-     * @notice Set the _contractURIHash.
-     * @dev Only callable by the owner.
+     * @notice 设置 _contractURIHash。 
+     * @dev 只能由所有者调用。
      */
     function setContractURIHash(string memory newContractURIHash) external onlyOwner {
         _contractURIHash = newContractURIHash;
     }
 
     /**
-     * @notice Override isApprovedForAll to whitelist user's OpenSea proxy accounts to enable gas-less listings.
+     * @notice 覆盖 isApprovedForAll 以将用户的 OpenSea 代理帐户列入白名单以启用无气体列表。
      */
     function isApprovedForAll(address owner, address operator) public view override(IERC721, ERC721) returns (bool) {
-        // Whitelist OpenSea proxy contract for easy trading.
+        // 将 OpenSea 代理合约列入白名单以方便交易.
         if (proxyRegistry.proxies(owner) == operator) {
             return true;
         }
@@ -141,10 +144,9 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice Mint a Noun to the minter, along with a possible nounders reward
-     * Noun. Nounders reward Nouns are minted every 10 Nouns, starting at 0,
-     * until 183 nounder Nouns have been minted (5 years w/ 24 hour auctions).
-     * @dev Call _mintTo with the to address(es).
+     * @notice 向铸币者 铸造一个 noun nft 
+     * 其中，每 10 个 noun nft 向 noundersDAO 奖励一个 NFT， 从 0 开始， 直到铸造了 183 个 NFT（5 年， 24 小时拍卖） 
+     * @dev 使用收件人地址调用 _mintTo
      */
     function mint() public override onlyMinter returns (uint256) {
         if (_currentNounId <= 1820 && _currentNounId % 10 == 0) {
@@ -154,7 +156,7 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice Burn a noun.
+     * @notice 烧一个名词
      */
     function burn(uint256 nounId) public override onlyMinter {
         _burn(nounId);
@@ -162,8 +164,8 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice A distinct Uniform Resource Identifier (URI) for a given asset.
-     * @dev See {IERC721Metadata-tokenURI}.
+     * @notice 给定资产的不同统一资源标识符 (URI)。 
+     * @dev 请参阅 {IERC721Metadata-tokenURI}。
      */
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         require(_exists(tokenId), 'NounsToken: URI query for nonexistent token');
@@ -171,8 +173,7 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice Similar to `tokenURI`, but always serves a base64 encoded data URI
-     * with the JSON contents directly inlined.
+     * @notice 类似于 `tokenURI`，但始终提供 base64 编码的数据 URI 直接内联 JSON 内容。
      */
     function dataURI(uint256 tokenId) public view override returns (string memory) {
         require(_exists(tokenId), 'NounsToken: URI query for nonexistent token');
@@ -180,8 +181,8 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice Set the nounders DAO.
-     * @dev Only callable by the nounders DAO when not locked.
+     * @notice 设置 Nouns DAO。 
+     * @dev 只有在未锁定时才可由名词 DAO 调用。
      */
     function setNoundersDAO(address _noundersDAO) external override onlyNoundersDAO {
         noundersDAO = _noundersDAO;
@@ -190,8 +191,8 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice Set the token minter.
-     * @dev Only callable by the owner when not locked.
+     * @notice 设置代币生成器。 
+     * @dev 只有在未被锁定时才可由所有者调用。
      */
     function setMinter(address _minter) external override onlyOwner whenMinterNotLocked {
         minter = _minter;
@@ -200,8 +201,8 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice Lock the minter.
-     * @dev This cannot be reversed and is only callable by the owner when not locked.
+     * @notice 锁定铸币厂。 
+     * @dev 这不能逆转，只有在未锁定时才能由所有者调用。
      */
     function lockMinter() external override onlyOwner whenMinterNotLocked {
         isMinterLocked = true;
@@ -210,8 +211,8 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice Set the token URI descriptor.
-     * @dev Only callable by the owner when not locked.
+     * @notice 设置令牌 URI 描述符。 
+     * @dev 只有在未被锁定时才可由所有者调用。
      */
     function setDescriptor(INounsDescriptor _descriptor) external override onlyOwner whenDescriptorNotLocked {
         descriptor = _descriptor;
@@ -220,8 +221,8 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice Lock the descriptor.
-     * @dev This cannot be reversed and is only callable by the owner when not locked.
+     * @notice 锁定描述符
+     * @dev 这不能逆转， 只有在未锁定时才能由所有者调用
      */
     function lockDescriptor() external override onlyOwner whenDescriptorNotLocked {
         isDescriptorLocked = true;
@@ -230,8 +231,8 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice Set the token seeder.
-     * @dev Only callable by the owner when not locked.
+     * @notice 设置 token 播种者
+     * @dev 只有在 未被锁定时 才可由所有者调用
      */
     function setSeeder(INounsSeeder _seeder) external override onlyOwner whenSeederNotLocked {
         seeder = _seeder;
@@ -240,8 +241,8 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice Lock the seeder.
-     * @dev This cannot be reversed and is only callable by the owner when not locked.
+     * @notice 锁定播种机 
+     * @dev 这不能逆转，只有在未锁定时才能由所有者调用
      */
     function lockSeeder() external override onlyOwner whenSeederNotLocked {
         isSeederLocked = true;
@@ -250,9 +251,10 @@ contract NounsToken is INounsToken, Ownable, ERC721Checkpointable {
     }
 
     /**
-     * @notice Mint a Noun with `nounId` to the provided `to` address.
+     * @notice 将带有 `nounId` 的 nft 添加到提供的 `to` 地址
      */
     function _mintTo(address to, uint256 nounId) internal returns (uint256) {
+        
         INounsSeeder.Seed memory seed = seeds[nounId] = seeder.generateSeed(nounId, descriptor);
 
         _mint(owner(), to, nounId);

@@ -19,44 +19,37 @@
 // NounsDAOLogicV1.sol is a modified version of Compound Lab's GovernorBravoDelegate.sol:
 // https://github.com/compound-finance/compound-protocol/blob/b9b14038612d846b83f8a009a82c38974ff2dcfe/contracts/Governance/GovernorBravoDelegate.sol
 //
-// GovernorBravoDelegate.sol source code Copyright 2020 Compound Labs, Inc. licensed under the BSD-3-Clause license.
-// With modifications by Nounders DAO.
+// GovernorBravoDelegate.sol 源代码 版权所有 2020 Compound Labs, Inc.，根据 BSD-3-Clause 许可进行许可。 
+// 由 Nounders DAO 修改。 
+// 
+// BSD-3-Clause 的附加条件可以在这里找到：https://opensource.org/licenses/BSD-3-Clause 
+// 
+// 修改 
+// NounsDAOLogicV1 添加： 
+// - 建议阈值基点代替固定数量 
+// 由于 Noun 代币的供应增加 
+// 
+// - Quorum Votes 基点而不是固定数量 
+// 由于 Noun 代币的供应增加 
+// 
+// - 每个提案存储固定的 `proposalThreshold` 和 `quorumVotes` 使用名词令牌的总供应量计算 在创建提案的块和基点参数 
+// 
+// - `ProposalCreatedWithRequirements` 事件发出 `ProposalCreated` 参数 
+// 添加 `proposalThreshold` 和 ` quorumVotes` 
+// 
+// - 投票从创建提案的块中计算，而不是提案的投票起始块与参数对齐 
+// 与提案一起存储 
+// 
+// - 否决能力，允许 `veteor`在任何阶段停止任何提案，除非提案是 exe可爱。 
+// `veto(uint proposalId)` 逻辑是 `cancel(uint proposalId)` 的修改版本 在 `Proposal` 结构中添加了 `vetoed` 标志来支持这一点。 
+// 
+// NounsDAOLogicV1 删除： 
+// - `initialProposalId` 和 `_initiate()` 因为这是治理合约的第一个实例，这与升级GovernorAlpha 的GovernorBravo 
+// 
+// - 使用`timelock 传递的值不同 .executeTransaction{value: proposal.value}` 在 `execute(uint proposalId)` 中。
+//   该合约不应持有资金，并且没有实现 `receive()` 或 `fallback()` 函数。 
 //
-// Additional conditions of BSD-3-Clause can be found here: https://opensource.org/licenses/BSD-3-Clause
-//
-// MODIFICATIONS
-// NounsDAOLogicV1 adds:
-// - Proposal Threshold basis points instead of fixed number
-//   due to the Noun token's increasing supply
-//
-// - Quorum Votes basis points instead of fixed number
-//   due to the Noun token's increasing supply
-//
-// - Per proposal storing of fixed `proposalThreshold`
-//   and `quorumVotes` calculated using the Noun token's total supply
-//   at the block the proposal was created and the basis point parameters
-//
-// - `ProposalCreatedWithRequirements` event that emits `ProposalCreated` parameters with
-//   the addition of `proposalThreshold` and `quorumVotes`
-//
-// - Votes are counted from the block a proposal is created instead of
-//   the proposal's voting start block to align with the parameters
-//   stored with the proposal
-//
-// - Veto ability which allows `veteor` to halt any proposal at any stage unless
-//   the proposal is executed.
-//   The `veto(uint proposalId)` logic is a modified version of `cancel(uint proposalId)`
-//   A `vetoed` flag was added to the `Proposal` struct to support this.
-//
-// NounsDAOLogicV1 removes:
-// - `initialProposalId` and `_initiate()` due to this being the
-//   first instance of the governance contract unlike
-//   GovernorBravo which upgrades GovernorAlpha
-//
-// - Value passed along using `timelock.executeTransaction{value: proposal.value}`
-//   in `execute(uint proposalId)`. This contract should not hold funds and does not
-//   implement `receive()` or `fallback()` functions.
-//
+
 
 pragma solidity ^0.8.6;
 
@@ -69,46 +62,45 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
     /// @notice The minimum setable proposal threshold
     uint256 public constant MIN_PROPOSAL_THRESHOLD_BPS = 1; // 1 basis point or 0.01%
 
-    /// @notice The maximum setable proposal threshold
+    /// @notice 最大可设置提案阈值
     uint256 public constant MAX_PROPOSAL_THRESHOLD_BPS = 1_000; // 1,000 basis points or 10%
 
-    /// @notice The minimum setable voting period
+    /// @notice 可设定的最短投票期限
     uint256 public constant MIN_VOTING_PERIOD = 5_760; // About 24 hours
 
-    /// @notice The max setable voting period
+    /// @notice 最长可设置投票周期
     uint256 public constant MAX_VOTING_PERIOD = 80_640; // About 2 weeks
 
-    /// @notice The min setable voting delay
+    /// @notice 最小可设置的 投票延迟
     uint256 public constant MIN_VOTING_DELAY = 1;
 
-    /// @notice The max setable voting delay
+    /// @notice The max setable voting delay 最大可设置投票延迟
     uint256 public constant MAX_VOTING_DELAY = 40_320; // About 1 week
 
-    /// @notice The minimum setable quorum votes basis points
+    /// @notice The minimum setable quorum votes basis points 最低可设定的 法定人数投票基点
     uint256 public constant MIN_QUORUM_VOTES_BPS = 200; // 200 basis points or 2%
 
-    /// @notice The maximum setable quorum votes basis points
+    /// @notice The maximum setable quorum votes basis points 最大可设置的 法定人数投票基点
     uint256 public constant MAX_QUORUM_VOTES_BPS = 2_000; // 2,000 basis points or 20%
 
-    /// @notice The maximum number of actions that can be included in a proposal
+    /// @notice 提案中可以包含的最多 actions
     uint256 public constant proposalMaxOperations = 10; // 10 actions
 
     /// @notice The EIP-712 typehash for the contract's domain
-    bytes32 public constant DOMAIN_TYPEHASH =
-        keccak256('EIP712Domain(string name,uint256 chainId,address verifyingContract)');
+    bytes32 public constant DOMAIN_TYPEHASH = keccak256('EIP712Domain(string name,uint256 chainId,address verifyingContract)');
 
     /// @notice The EIP-712 typehash for the ballot struct used by the contract
     bytes32 public constant BALLOT_TYPEHASH = keccak256('Ballot(uint256 proposalId,uint8 support)');
 
     /**
-     * @notice Used to initialize the contract during delegator contructor
-     * @param timelock_ The address of the NounsDAOExecutor
-     * @param nouns_ The address of the NOUN tokens
-     * @param vetoer_ The address allowed to unilaterally veto proposals
-     * @param votingPeriod_ The initial voting period
-     * @param votingDelay_ The initial voting delay
-     * @param proposalThresholdBPS_ The initial proposal threshold in basis points
-     * * @param quorumVotesBPS_ The initial quorum votes threshold in basis points
+     * @notice 用于在 delegator contructor 期间初始化合约 
+     * @param timelock_ NounsDAOExecutor 的地址 
+     * @param nouns_ NOUN 代币的地址 
+     * @param vetoer_ 允许 单方面 否决提案的地址 
+     * @param votingPeriod_ 初始投票周期 
+     * @param votingDelay_ 初始投票延迟 
+     * @param proposalThresholdBPS_ 以基点为单位的初始提案阈值 
+     * @param quorumVotesBPS_ 以基点为单位的初始法定人数投票阈值
      */
     function initialize(
         address timelock_,
@@ -146,7 +138,10 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
         emit QuorumVotesBPSSet(quorumVotesBPS, quorumVotesBPS_);
 
         timelock = INounsDAOExecutor(timelock_);
+
+        // 治理 token
         nouns = NounsTokenLike(nouns_);
+
         vetoer = vetoer_;
         votingPeriod = votingPeriod_;
         votingDelay = votingDelay_;
@@ -163,13 +158,13 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
     }
 
     /**
-     * @notice Function used to propose a new proposal. Sender must have delegates above the proposal threshold
-     * @param targets Target addresses for proposal calls
-     * @param values Eth values for proposal calls
-     * @param signatures Function signatures for proposal calls
-     * @param calldatas Calldatas for proposal calls
-     * @param description String description of the proposal
-     * @return Proposal id of new proposal
+     * @notice 提出新提案  发送方必须有高于提案阈值 
+     * @param targets 提案调用的目标地址 
+     * @param values 提案调用的 Eth 值
+     * @param signatures 提案调用的函数签名 
+     * @param calldatas 提案调用的调用数据 
+     * @param description 字符串描述提案 
+     * @return 新提案的提案 ID
      */
     function propose(
         address[] memory targets,
@@ -178,20 +173,20 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
         bytes[] memory calldatas,
         string memory description
     ) public returns (uint256) {
+
         ProposalTemp memory temp;
 
         temp.totalSupply = nouns.totalSupply();
 
         temp.proposalThreshold = bps2Uint(proposalThresholdBPS, temp.totalSupply);
 
+        // 发送方必须高于 提案阈值  
         require(
             nouns.getPriorVotes(msg.sender, block.number - 1) > temp.proposalThreshold,
             'NounsDAO::propose: proposer votes below proposal threshold'
         );
         require(
-            targets.length == values.length &&
-                targets.length == signatures.length &&
-                targets.length == calldatas.length,
+            targets.length == values.length && targets.length == signatures.length && targets.length == calldatas.length,
             'NounsDAO::propose: proposal function information arity mismatch'
         );
         require(targets.length != 0, 'NounsDAO::propose: must provide actions');
@@ -236,7 +231,7 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
 
         latestProposalIds[newProposal.proposer] = newProposal.id;
 
-        /// @notice Maintains backwards compatibility with GovernorBravo events
+        /// @notice 保持与 GovernorBravo 事件的向后兼容性
         emit ProposalCreated(
             newProposal.id,
             msg.sender,
@@ -249,7 +244,7 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
             description
         );
 
-        /// @notice Updated event with `proposalThreshold` and `quorumVotes`
+        /// @notice 使用 `proposalThreshold` 和 `quorumVotes` 更新事件
         emit ProposalCreatedWithRequirements(
             newProposal.id,
             msg.sender,
@@ -268,8 +263,8 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
     }
 
     /**
-     * @notice Queues a proposal of state succeeded
-     * @param proposalId The id of the proposal to queue
+     * @notice 排队一个状态为成功的提案 
+     * @param proposalId 要排队的提案的 id
      */
     function queue(uint256 proposalId) external {
         require(
@@ -291,6 +286,7 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
         emit ProposalQueued(proposalId, eta);
     }
 
+    // 添加 action 到 执行队列种
     function queueOrRevertInternal(
         address target,
         uint256 value,
@@ -298,16 +294,18 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
         bytes memory data,
         uint256 eta
     ) internal {
+
         require(
             !timelock.queuedTransactions(keccak256(abi.encode(target, value, signature, data, eta))),
             'NounsDAO::queueOrRevertInternal: identical proposal action already queued at eta'
         );
+
         timelock.queueTransaction(target, value, signature, data, eta);
     }
 
     /**
-     * @notice Executes a queued proposal if eta has passed
-     * @param proposalId The id of the proposal to execute
+     * @notice 执行提议， 如果 eta 已通过， 则执行排队的提案 
+     * @param proposalId 要执行的提案的 id
      */
     function execute(uint256 proposalId) external {
         require(
@@ -329,15 +327,20 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
     }
 
     /**
-     * @notice Cancels a proposal only if sender is the proposer, or proposer delegates dropped below proposal threshold
-     * @param proposalId The id of the proposal to cancel
+     * @notice 取消提议， 仅当发送者是 提议者 或 提议者投票权 低于 提议阈值时 才可以取消提议 
+     * @param proposalId 要取消的提议的 ID
      */
     function cancel(uint256 proposalId) external {
+
         require(state(proposalId) != ProposalState.Executed, 'NounsDAO::cancel: cannot cancel executed proposal');
 
         Proposal storage proposal = proposals[proposalId];
+
+        // 可以取消提议的2种情况：
+        // 1) 发送者是 提议者 
+        // 2) 提议者的 投票权 小于 提议阈值  
         require(
-            msg.sender == proposal.proposer ||
+            msg.sender == proposal.proposer || 
                 nouns.getPriorVotes(proposal.proposer, block.number - 1) < proposal.proposalThreshold,
             'NounsDAO::cancel: proposer above threshold'
         );
@@ -357,8 +360,8 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
     }
 
     /**
-     * @notice Vetoes a proposal only if sender is the vetoer and the proposal has not been executed.
-     * @param proposalId The id of the proposal to veto
+     * @notice 仅当发件人 是否决者 且 提案尚未执行时才否决提案 
+     * @param proposalId 要否决的提案的 id  
      */
     function veto(uint256 proposalId) external {
         require(vetoer != address(0), 'NounsDAO::veto: veto power burned');
@@ -404,19 +407,19 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
     }
 
     /**
-     * @notice Gets the receipt for a voter on a given proposal
-     * @param proposalId the id of proposal
-     * @param voter The address of the voter
-     * @return The voting receipt
+     * @notice 获取给定提案的投票者的收据 
+     * @param proposalId 提案的 ID 
+     * @param voter 投票者的地址 
+     * @return 投票收据
      */
     function getReceipt(uint256 proposalId, address voter) external view returns (Receipt memory) {
         return proposals[proposalId].receipts[voter];
     }
 
     /**
-     * @notice Gets the state of a proposal
-     * @param proposalId The id of the proposal
-     * @return Proposal state
+     * @notice 获取提案的状态 
+     * @param proposalId 提案的id 
+     * @return 提案状态
      */
     function state(uint256 proposalId) public view returns (ProposalState) {
         require(proposalCount >= proposalId, 'NounsDAO::state: invalid proposal id');
@@ -443,19 +446,19 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
     }
 
     /**
-     * @notice Cast a vote for a proposal
-     * @param proposalId The id of the proposal to vote on
-     * @param support The support value for the vote. 0=against, 1=for, 2=abstain
+     * @notice 为提案投票 
+     * @param proposalId 要投票的提案的 ID 
+     * @param support 投票的支持值。 0 = 反对，1 = 赞成， 2 = 弃权
      */
     function castVote(uint256 proposalId, uint8 support) external {
         emit VoteCast(msg.sender, proposalId, support, castVoteInternal(msg.sender, proposalId, support), '');
     }
 
     /**
-     * @notice Cast a vote for a proposal with a reason
-     * @param proposalId The id of the proposal to vote on
-     * @param support The support value for the vote. 0=against, 1=for, 2=abstain
-     * @param reason The reason given for the vote by the voter
+     * @notice 为有原因的 提案投票 
+     * @param proposalId 要投票的提案的 ID 
+     * @param support 投票的支持值。 0 = 反对,  1 = 赞成, 2 = 弃权 
+     * @param reason 投票者给出的投票理由   
      */
     function castVoteWithReason(
         uint256 proposalId,
@@ -466,8 +469,8 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
     }
 
     /**
-     * @notice Cast a vote for a proposal by signature
-     * @dev External function that accepts EIP-712 signatures for voting on proposals.
+     * @notice 通过签名为提案投票 
+     * @dev 接受 EIP-712 签名以对提案进行投票的外部函数。  
      */
     function castVoteBySig(
         uint256 proposalId,
@@ -487,11 +490,11 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
     }
 
     /**
-     * @notice Internal function that caries out voting logic
-     * @param voter The voter that is casting their vote
-     * @param proposalId The id of the proposal to vote on
-     * @param support The support value for the vote. 0=against, 1=for, 2=abstain
-     * @return The number of votes cast
+     * @notice 执行 投票逻辑 
+     * @param voter 正在投票的选民 
+     * @param proposalId 要投票的提案的 ID 
+     * @param support 投票的支持值  0 = 反对, 1 = 赞成,  2 = 弃权 
+     * @return 投票数
      */
     function castVoteInternal(
         address voter,
@@ -504,9 +507,8 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
         Receipt storage receipt = proposal.receipts[voter];
         require(receipt.hasVoted == false, 'NounsDAO::castVoteInternal: voter already voted');
 
-        /// @notice: Unlike GovernerBravo, votes are considered from the block the proposal was created in order to normalize quorumVotes and proposalThreshold metrics
+        /// @notice: 和 GovernerBravo 不同，投票 是从创建提案的 区块中 考虑的，以便 标准化 quorumVotes 和 proposalThreshold 指标
         uint96 votes = nouns.getPriorVotes(voter, proposal.startBlock - votingDelay);
-
         if (support == 0) {
             proposal.againstVotes = proposal.againstVotes + votes;
         } else if (support == 1) {
@@ -523,15 +525,18 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
     }
 
     /**
-     * @notice Admin function for setting the voting delay
-     * @param newVotingDelay new voting delay, in blocks
+     * @notice 用于设置投票延迟的管理员功能 
+     * @param newVotingDelay 新的投票延迟，以块为单位
      */
     function _setVotingDelay(uint256 newVotingDelay) external {
+
         require(msg.sender == admin, 'NounsDAO::_setVotingDelay: admin only');
+        
         require(
             newVotingDelay >= MIN_VOTING_DELAY && newVotingDelay <= MAX_VOTING_DELAY,
             'NounsDAO::_setVotingDelay: invalid voting delay'
         );
+        
         uint256 oldVotingDelay = votingDelay;
         votingDelay = newVotingDelay;
 
@@ -539,8 +544,8 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
     }
 
     /**
-     * @notice Admin function for setting the voting period
-     * @param newVotingPeriod new voting period, in blocks
+     * @notice 设置投票周期的管理员功能 
+     * @param newVotingPeriod 新的投票周期，以块为单位
      */
     function _setVotingPeriod(uint256 newVotingPeriod) external {
         require(msg.sender == admin, 'NounsDAO::_setVotingPeriod: admin only');
@@ -555,15 +560,14 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
     }
 
     /**
-     * @notice Admin function for setting the proposal threshold basis points
-     * @dev newProposalThresholdBPS must be greater than the hardcoded min
-     * @param newProposalThresholdBPS new proposal threshold
+     * @notice 用于设置 提案阈值 
+     * @dev newProposalThresholdBPS 必须大于 硬编码 的最小值 
+     * @param newProposalThresholdBPS 新 提案阈值
      */
     function _setProposalThresholdBPS(uint256 newProposalThresholdBPS) external {
         require(msg.sender == admin, 'NounsDAO::_setProposalThresholdBPS: admin only');
         require(
-            newProposalThresholdBPS >= MIN_PROPOSAL_THRESHOLD_BPS &&
-                newProposalThresholdBPS <= MAX_PROPOSAL_THRESHOLD_BPS,
+            newProposalThresholdBPS >= MIN_PROPOSAL_THRESHOLD_BPS && newProposalThresholdBPS <= MAX_PROPOSAL_THRESHOLD_BPS,
             'NounsDAO::_setProposalThreshold: invalid proposal threshold'
         );
         uint256 oldProposalThresholdBPS = proposalThresholdBPS;
@@ -573,12 +577,13 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
     }
 
     /**
-     * @notice Admin function for setting the quorum votes basis points
-     * @dev newQuorumVotesBPS must be greater than the hardcoded min
-     * @param newQuorumVotesBPS new proposal threshold
+     * @notice 用于设置法定投票基点的管理功能 
+     * @dev newQuorumVotesBPS 必须大于硬编码的最小值 
+     * @param newQuorumVotesBPS 新提案阈值
      */
     function _setQuorumVotesBPS(uint256 newQuorumVotesBPS) external {
         require(msg.sender == admin, 'NounsDAO::_setQuorumVotesBPS: admin only');
+
         require(
             newQuorumVotesBPS >= MIN_QUORUM_VOTES_BPS && newQuorumVotesBPS <= MAX_QUORUM_VOTES_BPS,
             'NounsDAO::_setProposalThreshold: invalid proposal threshold'
@@ -590,21 +595,24 @@ contract NounsDAOLogicV1 is NounsDAOStorageV1, NounsDAOEvents {
     }
 
     /**
-     * @notice Begins transfer of admin rights. The newPendingAdmin must call `_acceptAdmin` to finalize the transfer.
-     * @dev Admin function to begin change of admin. The newPendingAdmin must call `_acceptAdmin` to finalize the transfer.
-     * @param newPendingAdmin New pending admin.
+     * @notice 开始转移管理员权限。 newPendingAdmin 必须调用 `_acceptAdmin` 来完成传输。 
+     * @dev 管理员功能开始更改管理员。 newPendingAdmin 必须调用 `_acceptAdmin` 来完成传输。 
+     * @param newPendingAdmin 新的待处理管理员。
      */
     function _setPendingAdmin(address newPendingAdmin) external {
         // Check caller = admin
-        require(msg.sender == admin, 'NounsDAO::_setPendingAdmin: admin only');
+        require(
+            msg.sender == admin, 
+            'NounsDAO::_setPendingAdmin: admin only'
+        );
 
-        // Save current value, if any, for inclusion in log
+        // 保存当前值（如果有）以包含在日志中
         address oldPendingAdmin = pendingAdmin;
 
-        // Store pendingAdmin with value newPendingAdmin
+        // 使用值 newPendingAdmin 存储 pendingAdmin
         pendingAdmin = newPendingAdmin;
 
-        // Emit NewPendingAdmin(oldPendingAdmin, newPendingAdmin)
+        // 发出 NewPendingAdmin(oldPendingAdmin, newPendingAdmin)
         emit NewPendingAdmin(oldPendingAdmin, newPendingAdmin);
     }
 

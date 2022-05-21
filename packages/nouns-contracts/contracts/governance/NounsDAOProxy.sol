@@ -19,19 +19,19 @@
 // NounsDAOProxy.sol is a modified version of Compound Lab's GovernorBravoDelegator.sol:
 // https://github.com/compound-finance/compound-protocol/blob/b9b14038612d846b83f8a009a82c38974ff2dcfe/contracts/Governance/GovernorBravoDelegator.sol
 //
-// GovernorBravoDelegator.sol source code Copyright 2020 Compound Labs, Inc. licensed under the BSD-3-Clause license.
-// With modifications by Nounders DAO.
-//
-// Additional conditions of BSD-3-Clause can be found here: https://opensource.org/licenses/BSD-3-Clause
-//
-//
-// NounsDAOProxy.sol uses parts of Open Zeppelin's Proxy.sol:
-// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/5c8746f56b4bed8cc9e0e044f5f69ab2f9428ce1/contracts/proxy/Proxy.sol
-//
-// Proxy.sol source code licensed under MIT License.
-//
-// MODIFICATIONS
-// The fallback() and receive() functions of Proxy.sol have been used to allow Solidity > 0.6.0 compatibility
+// GovernorBravoDelegator.sol 源代码 版权所有 2020 Compound Labs, Inc.，根据 BSD-3-Clause 许可进行许可。 
+// 由 Nounders DAO 修改。 
+// 
+// BSD-3-Clause 的附加条件可以在这里找到：https://opensource.org/licenses/BSD-3-Clause 
+// 
+// 
+// NounsDAOProxy.sol 使用了 Open Zeppelin 的 Proxy.sol 的一部分： 
+// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/5c8746f56b4bed8cc9e0e044f5f69ab2f9428ce1/contracts/proxy/Proxy.sol 
+// 
+// Proxy.sol 源代码在 MIT 许可下授权。 
+// 
+// 修改 
+// Proxy.sol 的 fallback() 和 receive() 函数已用于允许 Solidity > 0.6.0 兼容性
 
 pragma solidity ^0.8.6;
 
@@ -49,7 +49,7 @@ contract NounsDAOProxy is NounsDAOProxyStorage, NounsDAOEvents {
         uint256 proposalThresholdBPS_,
         uint256 quorumVotesBPS_
     ) {
-        // Admin set to msg.sender for initialization
+        // 管理员设置为 msg.sender 进行初始化
         admin = msg.sender;
 
         delegateTo(
@@ -72,8 +72,8 @@ contract NounsDAOProxy is NounsDAOProxyStorage, NounsDAOEvents {
     }
 
     /**
-     * @notice Called by the admin to update the implementation of the delegator
-     * @param implementation_ The address of the new implementation for delegation
+     * @notice 由管理员调用以更新委托者的实现 
+     * @param implementation_ 委托的新实现的地址
      */
     function _setImplementation(address implementation_) public {
         require(msg.sender == admin, 'NounsDAOProxy::_setImplementation: admin only');
@@ -86,10 +86,10 @@ contract NounsDAOProxy is NounsDAOProxyStorage, NounsDAOEvents {
     }
 
     /**
-     * @notice Internal method to delegate execution to another contract
-     * @dev It returns to the external caller whatever the implementation returns or forwards reverts
-     * @param callee The contract to delegatecall
-     * @param data The raw data to delegatecall
+     * @notice 将 执行 委托 给另一个 合约 的 内部方法 
+     * @dev 无论实现返回或转发还原， 它都会返回给外部调用者 
+     * @param callee 委托调用的合约 
+     * @param data 委托调用的原始数据
      */
     function delegateTo(address callee, bytes memory data) internal {
         (bool success, bytes memory returnData) = callee.delegatecall(data);
@@ -101,12 +101,11 @@ contract NounsDAOProxy is NounsDAOProxyStorage, NounsDAOEvents {
     }
 
     /**
-     * @dev Delegates execution to an implementation contract.
-     * It returns to the external caller whatever the implementation returns
-     * or forwards reverts.
+     * @dev 将执行委托给实现合同。 
+     * 无论实现返回什么，它都会返回给外部调用者 或 forwards 还原。
      */
     function _fallback() internal {
-        // delegate all other functions to current implementation
+        // 将所有其他功能委托给当前实现 
         (bool success, ) = implementation.delegatecall(msg.data);
 
         assembly {
@@ -124,16 +123,14 @@ contract NounsDAOProxy is NounsDAOProxyStorage, NounsDAOEvents {
     }
 
     /**
-     * @dev Fallback function that delegates calls to the `implementation`. Will run if no other
-     * function in the contract matches the call data.
+     * @dev 后备函数， 将调用委托给 “实现” 。 如果合约中没有其他函数与调用数据匹配，则将运行。
      */
     fallback() external payable {
         _fallback();
     }
 
     /**
-     * @dev Fallback function that delegates calls to `implementation`. Will run if call data
-     * is empty.
+     * @dev 将调用委托给“实现”的后备函数。如果呼叫数据为空，将运行
      */
     receive() external payable {
         _fallback();

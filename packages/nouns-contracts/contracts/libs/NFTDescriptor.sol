@@ -1,19 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-/// @title A library used to construct ERC721 token URIs and SVG images
-
-/*********************************
- * ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ *
- * ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ *
- * ░░░░░░█████████░░█████████░░░ *
- * ░░░░░░██░░░████░░██░░░████░░░ *
- * ░░██████░░░████████░░░████░░░ *
- * ░░██░░██░░░████░░██░░░████░░░ *
- * ░░██░░██░░░████░░██░░░████░░░ *
- * ░░░░░░█████████░░█████████░░░ *
- * ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ *
- * ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ *
- *********************************/
+/// @title 用于构造 ERC721 令牌 URI 和 SVG 图像的库
 
 pragma solidity ^0.8.6;
 
@@ -55,7 +42,7 @@ library NFTDescriptor {
     }
 
     /**
-     * @notice Generate an SVG image for use in the ERC721 token URI.
+     * @notice 生成用于 ERC721 令牌 URI 的 SVG 图像
      */
     function generateSVGImage(MultiPartRLEToSVG.SVGParams memory params, mapping(uint8 => string[]) storage palettes)
         public

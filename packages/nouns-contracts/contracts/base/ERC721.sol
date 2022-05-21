@@ -19,16 +19,14 @@
 // ERC721.sol modifies OpenZeppelin's ERC721.sol:
 // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/6618f9f18424ade44116d0221719f4c93be6a078/contracts/token/ERC721/ERC721.sol
 //
-// ERC721.sol source code copyright OpenZeppelin licensed under the MIT License.
-// With modifications by Nounders DAO.
-//
-//
-// MODIFICATIONS:
-// `_safeMint` and `_mint` contain an additional `creator` argument and
-// emit two `Transfer` logs, rather than one. The first log displays the
-// transfer (mint) from `address(0)` to the `creator`. The second displays the
-// transfer from the `creator` to the `to` address. This enables correct
-// attribution on various NFT marketplaces.
+// ERC721.sol 源代码版权所有 OpenZeppelin 在 MIT 许可下许可。 
+// 由 Nounders DAO 修改。 
+// 
+// 
+// 修改： 
+// `_safeMint` 和 `_mint` 包含一个额外的 `creator` 参数并且发出两个 `Transfer` 日志，而不是一个。第一个日志显示 从 `address(0)` 到 `creator` 的转移（铸币厂）。
+// 第二个显示 从 `creator` 到 `to` 地址的转移。这可以在各种 NFT 市场上进行正确的 归因。
+
 
 pragma solidity ^0.8.6;
 
@@ -439,10 +437,9 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      *
      * Calling conditions:
      *
-     * - When `from` and `to` are both non-zero, ``from``'s `tokenId` will be
-     * transferred to `to`.
+     * - When `from` and `to` are both non-zero, `from`'s `tokenId` will be transferred to `to`.
      * - When `from` is zero, `tokenId` will be minted for `to`.
-     * - When `to` is zero, ``from``'s `tokenId` will be burned.
+     * - When `to` is zero, `from`'s `tokenId` will be burned.
      * - `from` and `to` are never both zero.
      *
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].

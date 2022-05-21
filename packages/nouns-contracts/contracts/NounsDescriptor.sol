@@ -234,10 +234,8 @@ contract NounsDescriptor is INounsDescriptor, Ownable {
     }
 
     /**
-     * @notice Set the base URI for all token IDs. It is automatically
-     * added as a prefix to the value returned in {tokenURI}, or to the
-     * token ID if {tokenURI} is empty.
-     * @dev This can only be called by the owner.
+     * @notice 设置所有令牌 ID 的基本 URI。 它会自动作为前缀添加到 {tokenURI} 中返回的值， 或者如果 {tokenURI} 为空，则添加到 令牌 ID 
+     * @dev 这只能由所有者调用。
      */
     function setBaseURI(string calldata _baseURI) external override onlyOwner {
         baseURI = _baseURI;
@@ -246,8 +244,8 @@ contract NounsDescriptor is INounsDescriptor, Ownable {
     }
 
     /**
-     * @notice Given a token ID and seed, construct a token URI for an official Nouns DAO noun.
-     * @dev The returned value may be a base64 encoded data URI or an API URL.
+     * @notice 给定一个令牌 ID 和种子， 为 nft 构造一个令牌 URI 
+     * @dev 返回的值可能是 base64 编码的数据URI或者API URL
      */
     function tokenURI(uint256 tokenId, INounsSeeder.Seed memory seed) external view override returns (string memory) {
         if (isDataURIEnabled) {
@@ -257,7 +255,7 @@ contract NounsDescriptor is INounsDescriptor, Ownable {
     }
 
     /**
-     * @notice Given a token ID and seed, construct a base64 encoded data URI for an official Nouns DAO noun.
+     * @notice 给定一个令牌 ID 和种子， 为 nft 构造一个 base64 编码的数据 URI。
      */
     function dataURI(uint256 tokenId, INounsSeeder.Seed memory seed) public view override returns (string memory) {
         string memory nounId = tokenId.toString();
@@ -268,7 +266,7 @@ contract NounsDescriptor is INounsDescriptor, Ownable {
     }
 
     /**
-     * @notice Given a name, description, and seed, construct a base64 encoded data URI.
+     * @notice 给定名称、 描述 和 种子， 构造一个 base64 编码的数据 URI
      */
     function genericDataURI(
         string memory name,
@@ -296,7 +294,7 @@ contract NounsDescriptor is INounsDescriptor, Ownable {
     }
 
     /**
-     * @notice Add a single color to a color palette.
+     * @notice 将单一颜色添加到调色板。
      */
     function _addColorToPalette(uint8 _paletteIndex, string calldata _color) internal {
         palettes[_paletteIndex].push(_color);
@@ -317,7 +315,7 @@ contract NounsDescriptor is INounsDescriptor, Ownable {
     }
 
     /**
-     * @notice Add a Noun accessory.
+     * @notice 添加一个 配件。
      */
     function _addAccessory(bytes calldata _accessory) internal {
         accessories.push(_accessory);
@@ -338,7 +336,7 @@ contract NounsDescriptor is INounsDescriptor, Ownable {
     }
 
     /**
-     * @notice Get all Noun parts for the passed `seed`.
+     * @notice 获取传递的 “种子” 的所有名词部分
      */
     function _getPartsForSeed(INounsSeeder.Seed memory seed) internal view returns (bytes[] memory) {
         bytes[] memory _parts = new bytes[](4);

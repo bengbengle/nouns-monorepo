@@ -21,15 +21,15 @@ interface INounsAuctionHouse {
     struct Auction {
         // ID for the Noun (ERC721 token ID)
         uint256 nounId;
-        // The current highest bid amount
+        // 当前最高出价金额
         uint256 amount;
-        // The time that the auction started
+        // 拍卖开始的时间
         uint256 startTime;
-        // The time that the auction is scheduled to end
+        // 拍卖计划结束的时间
         uint256 endTime;
-        // The address of the current highest bid
+        // 当前最高出价的地址
         address payable bidder;
-        // Whether or not the auction has been settled
+        // 拍卖是否已经结算
         bool settled;
     }
 
