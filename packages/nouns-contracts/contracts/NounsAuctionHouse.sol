@@ -225,7 +225,7 @@ contract NounsAuctionHouse is INounsAuctionHouse, PausableUpgradeable, Reentranc
     }
 
     /**
-     * @notice 进行拍卖，最终确定出价并支付给所有者。 
+     * @notice 进行拍卖，最终确定出价 并支付给所有者。 
      * @dev 如果没有出价，名词被烧毁。
      */
     function _settleAuction() internal {

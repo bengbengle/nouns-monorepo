@@ -6,8 +6,8 @@ import { images, bgcolors } from './image-data.json';
 const { bodies, accessories, heads, glasses } = images;
 
 /**
- * Get encoded part and background information using a Noun seed
- * @param seed The Noun seed
+ * 使用名词种子获取编码部分和背景信息 
+ * @param seed 名词种子
  */
 export const getNounData = (seed: NounSeed): NounData => {
   return {
@@ -22,8 +22,8 @@ export const getNounData = (seed: NounSeed): NounData => {
 };
 
 /**
- * Generate a random Noun seed
- * @param seed The Noun seed
+ * 生成随机名词种子 
+ * @param seed 名词种子
  */
 export const getRandomNounSeed = (): NounSeed => {
   return {
@@ -36,10 +36,10 @@ export const getRandomNounSeed = (): NounSeed => {
 };
 
 /**
- * Emulate bitwise right shift and uint cast
- * @param value A Big Number
- * @param shiftAmount The amount to right shift
- * @param uintSize The uint bit size to cast to
+ * 模拟按位 权限 和 uint cast 
+ * @param value A Big Number 
+ * @param shiftAmount 右移量 
+ * @param uintSize 要转换的 uint 位大小
  */
 export const shiftRightAndCast = (
   value: BigNumberish,
@@ -51,11 +51,11 @@ export const shiftRightAndCast = (
 };
 
 /**
- * Emulates the NounsSeeder.sol methodology for pseudorandomly selecting a part
- * @param pseudorandomness Hex representation of a number
- * @param partCount The number of parts to pseudorandomly choose from
- * @param shiftAmount The amount to right shift
- * @param uintSize The size of the unsigned integer
+ * 模拟 NounsSeeder.sol 伪随机选择部件的方法 
+ * @param pseudorandomness 数字的十六进制表示 
+ * @param partCount 伪随机选择的部件数量 
+ * @param shiftAmount 右移量 
+ * @param uintSize 的大小无符号整数
  */
 export const getPseudorandomPart = (
   pseudorandomness: string,
@@ -68,9 +68,9 @@ export const getPseudorandomPart = (
 };
 
 /**
- * Emulates the NounsSeeder.sol methodology for generating a Noun seed
- * @param nounId The Noun tokenId used to create pseudorandomness
- * @param blockHash The block hash use to create pseudorandomness
+ * 模拟用于生成名词种子的 NounsSeeder.sol 方法 
+ * @param nounId 用于创建伪随机性的名词 tokenId 
+ * @param blockHash 用于创建伪随机性的块哈希
  */
 export const getNounSeedFromBlockHash = (nounId: BigNumberish, blockHash: string): NounSeed => {
   const pseudorandomness = solidityKeccak256(['bytes32', 'uint256'], [blockHash, nounId]);

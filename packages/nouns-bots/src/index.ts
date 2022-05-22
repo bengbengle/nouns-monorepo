@@ -43,7 +43,7 @@ async function setupAuction() {
 }
 
 /**
- * Process the last auction, update cache and push socials if new auction or respective bid is discovered
+ * 如果发现新的拍卖或相应的出价， 则处理最后一次拍卖， 更新缓存并推送社交
  */
 async function processAuctionTick() {
   const cachedAuctionId = await getAuctionCache();

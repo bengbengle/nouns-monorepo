@@ -57,16 +57,17 @@ const seed = getNounSeedFromBlockHash(nounId, blockHash);
 ## Examples
 
 **Almost off-chain Noun Crystal Ball**
-Generate a Noun using only a block hash, which saves calls to `NounSeeder` and `NounDescriptor` contracts. This can be used for a faster crystal ball.
+仅使用块哈希生成名词， 从而节省对 “NounSeeder” 和 “NounDescriptor” 合约的调用。 这可以用于更快的水晶球。
 
 ```ts
-/**
- * For you to implement:
-   - hook up providers with ether/web3.js
-   - get currently auctioned Noun Id from the NounsAuctionHouse contract
-   - add 1 to the current Noun Id to get the next Noun Id (named `nextNounId` below)
-   - get the latest block hash from your provider (named `latestBlockHash` below)
+/** 
+ * 供您实现： 
+  - 使用 ether/web3.js 连接提供者 
+  - 从 NounsAuctionHouse 合约中获取当前拍卖的名词 ID 
+  - 将当前名词 ID 加 1 以获取下一个名词 ID（在下面命名为 `nextNounId`） 
+  - 从你的提供者那里获取最新的区块哈希（下面命名为`latestBlockHash`）
 */
+
 
 import { ImageData, getNounSeedFromBlockHash, getNounData } from '@nouns/assets';
 import { buildSVG } from '@nouns/sdk';
